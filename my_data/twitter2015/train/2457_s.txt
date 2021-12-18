@@ -1,0 +1,1 @@
+Work	in	progress	:	generate	Swift	models	from	JSON	.	Almost	there	but	array	support	.	#swiftlang	#swiftify	http://t.co/7eGvyM7eY2
