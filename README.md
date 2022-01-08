@@ -11,6 +11,7 @@ Guidance**
 - torch==1.7.1
 - pytorch-crf==0.7.2
 - pillow==7.1.2
+- tqdm==4.62.3
 
 
 ## Dataset
@@ -22,7 +23,7 @@ Guidance**
 ### Image
 1. Download twitter images from [UMT](https://drive.google.com/file/d/1PpvvncnQkgDNeBMKVgG2zFYuRhbL873g/view)
 2. To detect visual objects, please follow [onestage_grounding
-](https://github.com/TransformersWsz/onestage_grounding/blob/master/my_readme.md) or you can directly download them from [twitter2015_img.tar.gz(password: l75t)](https://pan.baidu.com/s/1DCACHmDKYiW21Vnmn6YIvQ) and [twitter2017_img.tar.gz(password: kvc5)](https://pan.baidu.com/s/1UCdUgyspUBHiM8DvoF-R_A)
+](https://github.com/TransformersWsz/onestage_grounding/blob/master/my_readme.md) or you can directly download them from [twitter2015_img.tar.gz(password: l75t)](https://pan.baidu.com/s/1DCACHmDKYiW21Vnmn6YIvQ) and [twitter2017_img.tar.gz(password: 2017)](https://pan.baidu.com/s/173PbLBFWDEHjWH3zLtzZww)
 3. Unzip and put the images under the corresponding folder(e.g. `./data/twitter2015/image`)
 
 ### Text
@@ -42,6 +43,7 @@ python ddp_mmner.py --do_train --txtdir=./my_data/twitter2015 --imgdir=./data/tw
 python ddp_mmner.py --do_test --txtdir=./my_data/twitter2015 --imgdir=./data/twitter2015/image --ckpt_path=./ddp_mner.pt --test_batch_size=32
 ```
 - [Checkpoint on twitter2015(password: j9ib)](https://pan.baidu.com/s/1pa7xRJofE3oru3EsE2NB2w) has beed provided.
+- [Checkpoint on twitter2017(password: 2017)](https://pan.baidu.com/s/1iiUF7Cb0lczoWpTpah4rzA) has beed provided.
 
 ## Acknowledgements
 - Using these two datasets means you have read and accepted the copyrights set by Twitter and dataset providers.

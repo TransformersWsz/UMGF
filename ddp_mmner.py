@@ -31,7 +31,7 @@ from metric import evaluate_pred_file
 from config import tag2idx, idx2tag, max_len, max_node, log_fre
 
 warnings.filterwarnings("ignore")
-pre_file = "./output/twitter2015/{}/epoch_{}.txt"
+pre_file = "./output/twitter2017/{}/epoch_{}.txt"
 device = torch.device("cuda:3")
 
 
@@ -308,38 +308,41 @@ def save_model(model, model_path="./model.pt"):
 
 def predict(epoch, model, dataloader, mode="val", res=None):
     model.eval()
-    filepath = pre_file.format(mode, epoch)
-    with open(filepath, "w", encoding="utf8") as fw:
-        for i, batch in tqdm(enumerate(dataloader), desc="Predicting"):
-            b_ntokens = batch["b_ntokens"]
+    with torch.no_grad():
+        filepath = pre_file.format(mode, epoch)
+        with open(filepath, "w", encoding="utf8") as fw:
+            for i, batch in tqdm(enumerate(dataloader), total=len(dataloader), desc="Predicting"):
+                b_ntokens = batch["b_ntokens"]
 
-            x = batch["x"]
-            b_img = batch["b_img"]
-            inter_matrix = batch["b_matrix"]
-            text_mask = x["attention_mask"]
-            y = batch["y"]
-            output = model(x, b_img, inter_matrix, text_mask, y)
+                x = batch["x"]
+                b_img = batch["b_img"]
+                inter_matrix = batch["b_matrix"]
+                text_mask = x["attention_mask"]
+                y = batch["y"]
+                output = model(x, b_img, inter_matrix, text_mask, y)
 
-            # write into file
-            for idx, pre_seq in enumerate(output):
-                ground_seq = y[idx]
-                for pos, (pre_idx, ground_idx) in enumerate(zip(pre_seq, ground_seq)):
-                    if ground_idx == tag2idx["PAD"] or ground_idx == tag2idx["X"] or ground_idx == tag2idx["CLS"] or ground_idx == tag2idx["SEP"]:
-                        continue
-                    else:
-                        predict_tag = idx2tag[pre_idx] if idx2tag[pre_idx] not in [
-                            "PAD", "X", "CLS", "SEP"] else "O"
-                        true_tag = idx2tag[ground_idx.data.item()]
-                        line = "{}\t{}\t{}\n".format(b_ntokens[idx][pos], predict_tag, true_tag)
-                        fw.write(line)
-    print("=============={} -> {} epoch eval done=================".format(mode, epoch))
-    cur_f1 = evaluate_pred_file(filepath)
-    if mode == "test":
-        if res["best_f1"] < cur_f1:
-            res["best_f1"] = cur_f1
-        print("current best f1: {}".format(res["best_f1"]))
-        return True
-    return False
+                # write into file
+                for idx, pre_seq in enumerate(output):
+                    ground_seq = y[idx]
+                    for pos, (pre_idx, ground_idx) in enumerate(zip(pre_seq, ground_seq)):
+                        if ground_idx == tag2idx["PAD"] or ground_idx == tag2idx["X"] or ground_idx == tag2idx["CLS"] or ground_idx == tag2idx["SEP"]:
+                            continue
+                        else:
+                            predict_tag = idx2tag[pre_idx] if idx2tag[pre_idx] not in [
+                                "PAD", "X", "CLS", "SEP"] else "O"
+                            true_tag = idx2tag[ground_idx.data.item()]
+                            line = "{}\t{}\t{}\n".format(b_ntokens[idx][pos], predict_tag, true_tag)
+                            fw.write(line)
+        print("=============={} -> {} epoch eval done=================".format(mode, epoch))
+        cur_f1 = evaluate_pred_file(filepath)
+        to_save = False
+        if mode == "test":
+            if res["best_f1"] < cur_f1:
+                res["best_f1"] = cur_f1
+                res["epoch"] = epoch
+                to_save = True
+            print("current best f1: {}, epoch: {}".format(res["best_f1"], res["epoch"]))
+        return to_save
 
 
 def train(args):
@@ -366,6 +369,7 @@ def train(args):
 
     res = {}
     res["best_f1"] = 0.0
+    res["epoch"] = -1
     start = time.time()
     for epoch in range(args.num_train_epoch):
         model.train()
@@ -392,8 +396,8 @@ def train(args):
 
     print("================== train done! ================")
     end = time.time()
-    hour = (end-start)//3600
-    minute = (end-start)%3600//60
+    hour = int((end-start)//3600)
+    minute = int((end-start)%3600//60)
     print("total time: {} hour - {} minute".format(hour, minute))
 
 
@@ -407,9 +411,9 @@ def test(args):
 
     model.eval()
     with torch.no_grad():
-        filepath = "./tmp_test_output.txt"
+        filepath = "./test_output.txt"
         with open(filepath, "w", encoding="utf8") as fw:
-            for i, batch in tqdm(enumerate(test_dataloader), desc="Testing"):
+            for i, batch in tqdm(enumerate(test_dataloader), total=len(test_dataloader), desc="Testing"):
                 b_ntokens = batch["b_ntokens"]
 
                 x = batch["x"]
@@ -453,7 +457,7 @@ def main():
     parser.add_argument('--ckpt_path', 
                         type=str, 
                         default="./model.pt", 
-                        help="path to save model")
+                        help="path to save or load model")
     parser.add_argument("--num_train_epoch",
                         default=30,
                         type=int,
