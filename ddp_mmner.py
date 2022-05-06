@@ -31,7 +31,7 @@ from metric import evaluate_pred_file
 from config import tag2idx, idx2tag, max_len, max_node, log_fre
 
 warnings.filterwarnings("ignore")
-pre_file = "./output/twitter2017/{}/epoch_{}.txt"
+predict_file = "./output/twitter2017/{}/epoch_{}.txt"
 device = torch.device("cuda:3")
 
 
@@ -165,7 +165,7 @@ class MMNerModel(nn.Module):
         self.resnet = models.resnet152(pretrained=True)
         self.crf = CRF(len(tag2idx), batch_first=True)
         # self.hidden2tag = nn.Linear(2*d_model, len(tag2idx))
-        self.hidden2tag = nn.Linear(1280, len(tag2idx))
+        self.hidden2tag = nn.Linear(768+512, len(tag2idx))
 
         objcnndim = 2048
         fc_feats = self.resnet.fc.in_features
@@ -309,7 +309,7 @@ def save_model(model, model_path="./model.pt"):
 def predict(epoch, model, dataloader, mode="val", res=None):
     model.eval()
     with torch.no_grad():
-        filepath = pre_file.format(mode, epoch)
+        filepath = predict_file.format(mode, epoch)
         with open(filepath, "w", encoding="utf8") as fw:
             for i, batch in tqdm(enumerate(dataloader), total=len(dataloader), desc="Predicting"):
                 b_ntokens = batch["b_ntokens"]
@@ -336,7 +336,7 @@ def predict(epoch, model, dataloader, mode="val", res=None):
         print("=============={} -> {} epoch eval done=================".format(mode, epoch))
         cur_f1 = evaluate_pred_file(filepath)
         to_save = False
-        if mode == "test":
+        if mode == "val":
             if res["best_f1"] < cur_f1:
                 res["best_f1"] = cur_f1
                 res["epoch"] = epoch
@@ -389,8 +389,8 @@ def train(args):
                 print("EPOCH: {} Step: {} Loss: {}".format(epoch, i, loss.data))
 
         scheduler.step()
-        predict(epoch, model, val_dataloader, mode="val", res=res)
-        to_save = predict(epoch, model, test_dataloader, mode="test", res=res)
+        to_save = predict(epoch, model, val_dataloader, mode="val", res=res)
+        predict(epoch, model, test_dataloader, mode="test", res=res)
         if to_save:    # whether to save the best checkpoint
             save_model(model, args.ckpt_path)
 
