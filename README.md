@@ -40,7 +40,7 @@ python ddp_mmner.py --do_train --txtdir=./my_data/twitter2015 --imgdir=./data/tw
 ### Test
 
 ```bash
-python ddp_mmner.py --do_test --txtdir=./my_data/twitter2015 --imgdir=./data/twitter2015/image --ckpt_path=./ddp_mner.pt --test_batch_size=32
+python ddp_mmner.py --do_test --txtdir=./my_data/twitter2015 --imgdir=./data/twitter2015/image --ckpt_path=./model.pt --test_batch_size=32
 ```
 - [Checkpoint on twitter2015(password: j9ib)](https://pan.baidu.com/s/1pa7xRJofE3oru3EsE2NB2w) has beed provided.
 - [Checkpoint on twitter2017(password: 2017)](https://pan.baidu.com/s/1iiUF7Cb0lczoWpTpah4rzA) has beed provided.
